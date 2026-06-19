@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Loan & Credit Card Eligibility Engine</title>
+
+    <!-- Inter & Space Grotesk elegant display fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes pulse-slow {
+            0%,
+            100% {
+                opacity: 0.15;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.25;
+                transform: scale(1.05);
+            }
+        }
+        .bg-glow {
+            animation: pulse-slow 8s infinite ease-in-out;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Ambient glowing blobs -->
+    <div class="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-100 rounded-full blur-[120px] bg-glow pointer-events-none"></div>
+    <div class="absolute bottom-[-25%] right-[-10%] w-[70vw] h-[70vw] bg-blue-100 rounded-full blur-[140px] bg-glow pointer-events-none"></div>
+
+    <!-- ====== HEADER ====== -->
+    <header class="w-full max-w-lg mx-auto px-4 pt-6 pb-2 z-10">
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6v7z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-[10px] tracking-wider uppercase font-bold text-slate-400 block">Credit Eligibility Engine</span>
+                    <h1 class="text-sm font-bold text-slate-800 font-display">Smart Loan Assessor</h1>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 text-[11px] font-semibold text-emerald-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Secure Connection
+            </div>
+        </div>
+    </header>
+
+    <!-- ====== MAIN ====== -->
+    <main class="w-full max-w-lg mx-auto px-4 py-4 flex-1 flex flex-col justify-center z-10">
+        <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100/80 p-6 md:p-8 relative transition-all duration-300 min-h-[460px] flex flex-col justify-between">
+
+            <!-- ========================================================= -->
+            <!--  CONFIGURATION  (Vercel Env + Adsterra + Google Sheets)    -->
+            <!-- ========================================================= -->
+            <script>
+                // ------------------------------------------------------------
+                // 1.  VERCEL ENV / FALLBACK  (server-side vars exposed via __ENV)
+                //     In Vercel, set:  GOOGLE_WEBHOOK_URL, ADSTERRA_URL, SECRET_KEY
+                // ------------------------------------------------------------
+                const ENV = (typeof __ENV !== 'undefined') ? __ENV : {};
+
+                const CONFIG = {
+                    // Google Apps Script Webhook (for CPC / EPC / P&L)
+                    webhookUrl: ENV.GOOGLE_WEBHOOK_URL ||
+                        "https://script.google.com/macros/s/AKfycbx_YOUR_APPS_SCRIPT_ID/exec",
+
+                    // Adsterra redirect (final CTA)
+                    adsterraUrl: ENV.ADSTERRA_URL ||
+                        "https://adsterra.com/special-loan-offer",
+
+                    // Secret key for authentication
+                    secretKey: ENV.SECRET_KEY || "my_secret_key_123",
+
+                    // Google Analytics / Ads tracking ID (optional)
+                    googleAnalyticsId: ENV.GA_ID || "G-XXXXXXXXXX",
+                };
+
+                // -----------------------------------------------------------------
+                //  STATE
+                // -----------------------------------------------------------------
+                let answers = {
+                    age: "",
+                    income: "",
+                    creditScore: ""
+                };
+
+                let userIp = "UNKNOWN";
+                let sessionId = "";
+
+                // -----------------------------------------------------------------
+                //  HELPERS
+                // -----------------------------------------------------------------
+                function getUrlParameter(name) {
+                    name = name.replace(/[[]/, '\\[').replace(/[]]/, '\\]');
+                    const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+                    const results = regex.exec(location.search);
+                    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+                }
+
+                function generateSessionId() {
+                    return 'xxxxxxxxxxxx'.replace(/[x]/g, () =>
+                        ((Math.random() * 16) | 0).toString(16)
+                    ) + Date.now().toString(36);
+                }
+
+                // -----------------------------------------------------------------
+                //  IP DETECTION
+                // -----------------------------------------------------------------
+                async function fetchUserIp() {
+                    try {
+                        const ctrl = new AbortController();
+                        const tid = setTimeout(() => ctrl.abort(), 3500);
+                        const res = await fetch("https://api.ipify.org?format=json", { signal: ctrl.signal });
+                        const data = await res.json();
+                        userIp = data.ip || "UNKNOWN";
+                        clearTimeout(tid);
+                    } catch (_) {
+                        try {
+                            const cfRes = await fetch("https://cloudflare.com/cdn-cgi/trace");
+                            const txt = await cfRes.text();
+                            const m = txt.match(/ip=([^\s]+)/);
+                            if (m && m[1]) userIp = m[1];
+                        } catch (_) {
+                            userIp = "BLOCKED";
+                        }
+                    }
+                }
+
+                // -----------------------------------------------------------------
+                //  GOOGLE SHEETS  (CPC / EPC / Profit & Loss)
+                //  Sends every event with cost/revenue so you can compute:
+                //    CPC = cost / clicks
+                //    EPC = revenue / clicks
+                //    Profit = revenue - cost
+                // -----------------------------------------------------------------
+                async function sendWebhookEvent(eventName, extra = {}) {
+                    const params = new URLSearchParams(window.location.search);
+                    const campaignId = params.get('campaign') || params.get('campaign_id') || "NONE";
+                    const costStr = params.get('cost') || "0";
+                    const costVal = parseFloat(costStr) || 0;
+
+                    // Revenue is usually 0 on landing/clicks; you can set later via a separate
+                    // conversion ping if needed.  Here we pass 0 for landing/click,
+                    // but you could increment it if you have a conversion value.
+                    const revenueVal = extra.revenue || 0;
+
+                    const payload = {
+                        timestamp: new Date().toISOString(),
+                        session_id: sessionId,
+                        campaign_id: campaignId,
+                        ip: userIp,
+                        user_agent: navigator.userAgent,
+                        event: eventName, // "landing" | "age" | "income" | "credit" | "click" | "conversion"
+                        cost: costVal,
+                        revenue: revenueVal,
+                        secret_key: CONFIG.secretKey,
+                        // user answers (for audience segmentation)
+                        age: answers.age,
+                        income: answers.income,
+                        credit_score: answers.creditScore,
+                        // extra fields
+                        ...extra
+                    };
+
+                    console.log(`[Webhook] ${eventName}`, payload);
+
+                    try {
+                        await fetch(CONFIG.webhookUrl, {
+                            method: "POST",
+                            mode: "no-cors", // required for Google Apps Script
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": "Bearer " + CONFIG.secretKey
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                    } catch (err) {
+                        console.warn("Webhook offline:", err);
+                    }
+                }
+
+                // -----------------------------------------------------------------
+                //  GOOGLE ANALYTICS (optional pageview / event)
+                // -----------------------------------------------------------------
+                function sendGaEvent(action, label = '') {
+                    if (typeof gtag === 'function') {
+                        gtag('event', action, {
+                            'event_category': 'LoanAssessor',
+                            'event_label': label || action,
+                            'value': 1
+                        });
+                    }
+                }
+
+                // -----------------------------------------------------------------
+                //  INIT
+                // -----------------------------------------------------------------
+                window.addEventListener('DOMContentLoaded', async () => {
+                    sessionId = generateSessionId();
+                    await fetchUserIp();
+
+                    // Send landing event (cost = 0, revenue = 0)
+                    await sendWebhookEvent("landing");
+
+                    // Optional GA pageview
+                    if (CONFIG.googleAnalyticsId) {
+                        // If you include the GA snippet above, you can push a pageview
+                        // window.dataLayer = window.dataLayer || [];
+                        // function gtag(){ dataLayer.push(arguments); }
+                        // gtag('js', new Date());
+                        // gtag('config', CONFIG.googleAnalyticsId);
+                    }
+                });
+            </script>
+
+            <!-- ========================================================= -->
+            <!--  STEP 0 : INTRO                                            -->
+            <!-- ========================================================= -->
+            <section id="step-intro" class="fade-in space-y-6 flex-1 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-lg text-[12px] font-semibold text-blue-700">
+                        🔒 100% Secure Results
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight leading-snug font-display">
+                        Find the <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">best Personal & Home Loan</span> options for your profile.
+                    </h2>
+                    <p class="text-[14px] text-slate-500 leading-relaxed font-sans">
+                        Answer 3 simple questions to get pre-approved loan plans from banks and financial institutions.
+                        This form is completely free and secure.
+                    </p>
+                </div>
+
+                <div class="space-y-3 pt-6">
+                    <button onclick="goToStep('age')" class="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-2xl font-bold text-center flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] transition-all duration-250 cursor-pointer">
+                        Start Eligibility Check
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <div class="text-[11px] text-slate-400 text-center font-medium">⏱️ Time: only 30 seconds</div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!--  STEP 1 : AGE                                              -->
+            <!-- ========================================================= -->
+            <section id="step-age" class="hidden fade-in flex-1 flex flex-col justify-between">
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 1/3</span>
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">33% done</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full w-1/3 transition-all duration-300"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 leading-snug font-display">What is your current legal age?</h3>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="setAge('18 – 25')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>18 – 25 years</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setAge('25 – 40')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>25 – 40 years</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setAge('40 – 60')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>40 – 60 years</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setAge('60+')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>60 years or older</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="pt-6">
+                    <button onclick="goToStep('intro')" class="text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-all">
+                        ← Go Back
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!--  STEP 2 : INCOME                                           -->
+            <!-- ========================================================= -->
+            <section id="step-income" class="hidden fade-in flex-1 flex flex-col justify-between">
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 2/3</span>
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">66% done</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full w-2/3 transition-all duration-300"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 leading-snug font-display">What is your current monthly income?</h3>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="setIncome('Under ₹15,000')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>Less than ₹15,000 / month</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setIncome('₹15,000 – ₹30,000')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>₹15,000 – ₹30,000</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setIncome('₹30,000 – ₹50,000')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>₹30,000 – ₹50,000</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setIncome('₹50,000+')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>More than ₹50,000 / month</span>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="pt-6">
+                    <button onclick="goToStep('age')" class="text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-all">
+                        ← Go Back
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!--  STEP 3 : CREDIT SCORE                                     -->
+            <!-- ========================================================= -->
+            <section id="step-credit" class="hidden fade-in flex-1 flex flex-col justify-between">
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 3/3</span>
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">100% done</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 leading-snug font-display">What is your approximate Credit Score?</h3>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="setCredit('Excellent (750+)')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">🚀 Excellent (750+)</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">Instant approval with no hurdles</span>
+                            </div>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setCredit('Good (650–750)')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">👍 Good (650 – 750)</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">Accepted by most banks</span>
+                            </div>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setCredit('Fair (550–650)')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">📈 Fair (550 – 650)</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">May be approved with extra conditions</span>
+                            </div>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setCredit('Poor / Unknown (below 550)')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50/20 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">❓ Poor / Unknown</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">We’ll still find options for you</span>
+                            </div>
+                            <span class="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all text-transparent">✓</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="pt-6">
+                    <button onclick="goToStep('income')" class="text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-all">
+                        ← Go Back
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!--  STEP 4 : ANALYZING (loader)                               -->
+            <!-- ========================================================= -->
+            <section id="step-analyzing" class="hidden fade-in flex-1 flex flex-col items-center justify-center text-center space-y-6">
+                <div class="relative w-24 h-24">
+                    <div class="w-full h-full rounded-full border-4 border-slate-100"></div>
+                    <div class="absolute top-0 left-0 w-full h-full rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-emerald-600 font-extrabold text-sm" id="percentage-counter">0%</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-lg font-bold text-slate-800 font-display">Analyzing your profile…</h4>
+                    <p class="text-xs text-slate-400 font-medium" id="loader-dialog">Finding the best credit loan partners</p>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!--  STEP 5 : SUCCESS  +  CTA  (Adsterra redirect)            -->
+            <!-- ========================================================= -->
+            <section id="step-success" class="hidden fade-in space-y-6 flex-1 flex flex-col justify-between">
+                <div class="text-center space-y-4 py-4">
+                    <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 6 9 17l-5-5"/>
+                        </svg>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h4 class="text-2xl font-extrabold text-slate-800 tracking-tight font-display">Congratulations! You’re eligible 🎉</h4>
+                        <p class="text-xs text-emerald-600 font-semibold px-2 py-0.5 bg-emerald-50 inline-block rounded-full">4 special bank loan offers matched</p>
+                    </div>
+
+                    <p class="text-[13px] text-slate-500 leading-relaxed px-2">
+                        Based on your answers, we have unlocked special interest rates and fast-disbursement credit offers.
+                        Click the button below to claim your offer now.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="executeRedirect()" class="w-full py-4.5 px-6 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white rounded-2xl font-extrabold text-center flex items-center justify-center gap-2 hover:shadow-lg shadow-emerald-200 active:scale-[0.98] transition-all duration-300 animate-pulse cursor-pointer">
+                        Claim Your Offer & Apply
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                        </svg>
+                    </button>
+
+                    <div class="text-[10px] text-slate-400 text-center font-medium">
+                        🛡️ No CIBIL score drop • 1‑minute approval
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!--  JAVASCRIPT : NAVIGATION + LOGIC                           -->
+    <!-- ========================================================= -->
+    <script>
+        // -----------------------------------------------------------------
+        //  STEP NAVIGATION
+        // -----------------------------------------------------------------
+        function goToStep(stepId) {
+            const steps = ['intro', 'age', 'income', 'credit', 'analyzing', 'success'];
+            steps.forEach(id => {
+                const el = document.getElementById('step-' + id);
+                if (el) {
+                    el.classList.toggle('hidden', id !== stepId);
+                }
+            });
+        }
+
+        // -----------------------------------------------------------------
+        //  ANSWER HANDLERS  (send webhook events for each answer)
+        // -----------------------------------------------------------------
+        function setAge(val) {
+            answers.age = val;
+            console.log("Age:", val);
+            sendWebhookEvent("age", { age: val });
+            goToStep('income');
+        }
+
+        function setIncome(val) {
+            answers.income = val;
+            console.log("Income:", val);
+            sendWebhookEvent("income", { income: val });
+            goToStep('credit');
+        }
+
+        function setCredit(val) {
+            answers.creditScore = val;
+            console.log("Credit Score:", val);
+            sendWebhookEvent("credit", { credit_score: val });
+            initLoadingAndProcess();
+        }
+
+        // -----------------------------------------------------------------
+        //  LOADER  (simulated analysis)
+        // -----------------------------------------------------------------
+        function initLoadingAndProcess() {
+            goToStep('analyzing');
+            const counter = document.getElementById('percentage-counter');
+            const dialog = document.getElementById('loader-dialog');
+            let progress = 0;
+
+            const messages = [
+                "Verifying age profile…",
+                "Checking income bracket…",
+                "Matching credit bureau score…",
+                "Finalizing eligible bank list…"
+            ];
+
+            const interval = setInterval(() => {
+                progress += 4;
+                if (counter) counter.innerText = progress + "%";
+
+                if (dialog) {
+                    const idx = Math.min(Math.floor(progress / 25), messages.length - 1);
+                    dialog.innerText = messages[idx];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    // Send final "ready" event (still no revenue yet)
+                    sendWebhookEvent("ready");
+                    goToStep('success');
+                }
+            }, 60);
+        }
+
+        // -----------------------------------------------------------------
+        //  FINAL CTA  →  ADSTERRA  (with click tracking + revenue optional)
+        // -----------------------------------------------------------------
+        async function executeRedirect() {
+            // 1. Send "click" event to Google Sheets (cost = ad cost, revenue = 0)
+            //    You can later append a conversion event with revenue to calculate EPC.
+            await sendWebhookEvent("click", { revenue: 0 });
+
+            // 2. Optionally send a GA event
+            sendGaEvent('cta_click', 'adsterra_redirect');
+
+            // 3. Redirect to Adsterra (with a small delay to let the webhook fire)
+            setTimeout(() => {
+                window.location.href = CONFIG.adsterraUrl;
+            }, 400);
+        }
+
+        // -----------------------------------------------------------------
+        //  OPTIONAL: expose CONFIG to console for debugging
+        // -----------------------------------------------------------------
+        console.log("🔧 CONFIG:", CONFIG);
+        console.log("🔑 Env vars (Vercel):", typeof __ENV !== 'undefined' ? __ENV : 'not set');
+    </script>
+
+    <!-- ========================================================= -->
+    <!--  FOOTER                                                    -->
+    <!-- ========================================================= -->
+    <footer class="w-full text-center py-6 text-[11px] text-slate-400 font-medium z-10">
+        &copy; 2026 Smart Loan Matcher &bull; Secure Banking Information Provider &bull;
+        <a href="#" class="underline hover:text-slate-600">Privacy Policy</a>
+    </footer>
+
+</body>
+</html>
