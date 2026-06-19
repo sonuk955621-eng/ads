@@ -1,281 +1,612 @@
-export default function Home({ webhookUrl, adsterraUrl }) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Best Financial Loan & Credit Card Options</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-          tailwind.config = {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Best Financial Loan &amp; Credit Card Options</title>
+
+    <!-- Inter & Space Grotesk fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+
+    <script>
+        tailwind.config = {
             theme: {
-              extend: {
-                fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] }
-              }
-            }
-          }
-        </script>
-        <style>{`
-          @keyframes pulse-slow { 0%,100%{opacity:0.15;transform:scale(1)} 50%{opacity:0.25;transform:scale(1.05)} }
-          .bg-glow { animation: pulse-slow 8s infinite ease-in-out; }
-          .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
-          @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        `}</style>
-      </head>
-      <body className="bg-slate-50 text-slate-800 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden">
-        
-        <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-100 rounded-full blur-[120px] bg-glow pointer-events-none"></div>
-        <div className="absolute bottom-[-25%] right-[-10%] w-[70vw] h-[70vw] bg-blue-100 rounded-full blur-[140px] bg-glow pointer-events-none"></div>
-
-        <header className="w-full max-w-lg mx-auto px-4 pt-6 pb-2 z-10">
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6v7z"/>
-                  <path d="m9 12 2 2 4-4"/>
-                </svg>
-              </div>
-              <div><span className="text-[10px] tracking-wider uppercase font-bold text-slate-400 block">Credit Eligibility Engine</span>
-                <h1 className="text-sm font-bold text-slate-800 font-display">Smart Loan Assessor</h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 text-[11px] font-semibold text-emerald-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Secure
-            </div>
-          </div>
-        </header>
-
-        <main className="w-full max-w-lg mx-auto px-4 py-4 flex-1 flex flex-col justify-center z-10">
-          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100/80 p-6 md:p-8 relative transition-all duration-300 min-h-[460px] flex flex-col justify-between">
-
-            {/* 🔐  SERVER-SIDE INJECTED CONFIG – KEYS NEVER EXPOSED  */}
-            <script dangerouslySetInnerHTML={{
-              __html: `
-                const CONFIG = {
-                  webhookUrl: "${webhookUrl}",
-                  adsterraUrl: "${adsterraUrl}"
-                };
-                // ⚠️  SECRET_KEY IS NOT SENT TO THE BROWSER!
-              `
-            }} />
-
-            <script>{`
-              let answers = { age: "", income: "", creditScore: "" };
-              let userIp = "UNKNOWN";
-              let sessionId = "";
-
-              function generateSessionId() {
-                return 'xxxxxxxxxxxx'.replace(/[x]/g, () => ((Math.random()*16)|0).toString(16)) + Date.now().toString(36);
-              }
-
-              async function fetchUserIp() {
-                try {
-                  const ctrl = new AbortController();
-                  const tid = setTimeout(() => ctrl.abort(), 3500);
-                  const res = await fetch("https://api.ipify.org?format=json", { signal: ctrl.signal });
-                  const data = await res.json();
-                  userIp = data.ip || "UNKNOWN";
-                  clearTimeout(tid);
-                } catch (_) {
-                  try {
-                    const cfRes = await fetch("https://cloudflare.com/cdn-cgi/trace");
-                    const txt = await cfRes.text();
-                    const m = txt.match(/ip=([^\\s]+)/);
-                    if (m && m[1]) userIp = m[1];
-                  } catch (_) { userIp = "BLOCKED"; }
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    }
                 }
-              }
+            }
+        }
+    </script>
 
-              // 🔐  SECRET_KEY is NOT sent from the browser
-              async function sendWebhookEvent(eventName, extra = {}) {
-                const params = new URLSearchParams(window.location.search);
-                const campaignId = params.get('campaign') || params.get('campaign_id') || "NONE";
-                const costStr = params.get('cost') || "0";
-                const costVal = parseFloat(costStr) || 0;
-                const payload = {
-                  timestamp: new Date().toISOString(),
-                  session_id: sessionId,
-                  campaign_id: campaignId,
-                  ip: userIp,
-                  user_agent: navigator.userAgent,
-                  event: eventName,
-                  cost: costVal,
-                  revenue: extra.revenue || 0,
-                  age: answers.age,
-                  income: answers.income,
-                  credit_score: answers.creditScore,
-                  ...extra
+    <style>
+        /* ----- Continuous ambient glow animation ----- */
+        @keyframes pulse-slow {
+            0%,
+            100% {
+                opacity: 0.15;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.25;
+                transform: scale(1.05);
+            }
+        }
+        .bg-glow {
+            animation: pulse-slow 8s infinite ease-in-out;
+        }
+
+        /* ----- Fade-in transitions for steps ----- */
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ----- Custom card & button polish ----- */
+        .card-hover {
+            transition: all 0.25s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.08);
+        }
+
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.06);
+        }
+        .option-btn .check-circle {
+            transition: all 0.2s ease;
+            border-color: #e2e8f0;
+            background: white;
+            color: transparent;
+        }
+        .option-btn:hover .check-circle {
+            border-color: #10b981;
+            background: #10b981;
+            color: white;
+        }
+        .option-btn.selected .check-circle {
+            border-color: #10b981;
+            background: #10b981;
+            color: white;
+        }
+
+        /* ----- Spinner ring ----- */
+        .spinner-ring {
+            border: 4px solid #e2e8f0;
+            border-top-color: #10b981;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ----- Responsive tweaks ----- */
+        @media (max-width: 480px) {
+            .container-pad {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+
+        /* ----- Adsterra banner placeholder (visible when ID is set) ----- */
+        .ad-container {
+            min-height: 60px;
+            background: rgba(241, 245, 249, 0.6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border: 1px dashed #cbd5e1;
+            margin-top: 12px;
+        }
+        .ad-container iframe,
+        .ad-container img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden">
+
+    <!-- ===== AMBIENT GLOW BLOBS ===== -->
+    <div class="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-100 rounded-full blur-[120px] bg-glow pointer-events-none"></div>
+    <div class="absolute bottom-[-25%] right-[-10%] w-[70vw] h-[70vw] bg-blue-100 rounded-full blur-[140px] bg-glow pointer-events-none"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="w-full max-w-lg mx-auto px-4 pt-6 pb-2 z-10">
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between card-hover">
+            <div class="flex items-center gap-3">
+                <!-- Shield Icon -->
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6v7z" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-[10px] tracking-wider uppercase font-bold text-slate-400 block">Credit Eligibility Engine</span>
+                    <h1 class="text-sm font-bold text-slate-800 font-display">Special Loan Assessor</h1>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 text-[11px] font-semibold text-emerald-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Secure Connection
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="w-full max-w-lg mx-auto px-4 py-4 flex-1 flex flex-col justify-center z-10">
+        <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100/80 p-6 md:p-8 relative transition-all duration-300 min-h-[460px] flex flex-col justify-between">
+
+            <!-- ===== CONFIGURATION (fetched from Vercel env) ===== -->
+            <script>
+                // ----- CONFIGURATION LOADER -----
+                let CONFIG = {
+                    webhookUrl: '',
+                    secretKey: '',
+                    redirectUrl: '',
+                    adsterraId: ''
                 };
-                console.log("[Webhook]", eventName, payload);
-                try {
-                  await fetch(CONFIG.webhookUrl, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                  });
-                } catch (err) { console.warn("Webhook error:", err); }
-              }
 
-              window.addEventListener('DOMContentLoaded', async () => {
-                sessionId = generateSessionId();
-                await fetchUserIp();
-                await sendWebhookEvent("landing");
-              });
-            `}</script>
+                // Load config from Vercel API endpoint
+                async function loadConfig() {
+                    try {
+                        const res = await fetch('/api/config');
+                        if (res.ok) {
+                            const data = await res.json();
+                            CONFIG.webhookUrl = data.webhookUrl || '';
+                            CONFIG.secretKey = data.secretKey || '';
+                            CONFIG.redirectUrl = data.redirectUrl || 'https://example.com/offer';
+                            CONFIG.adsterraId = data.adsterraId || '';
+                            // Inject Adsterra script if ID is provided
+                            if (CONFIG.adsterraId && CONFIG.adsterraId.length > 0) {
+                                injectAdsterra(CONFIG.adsterraId);
+                            }
+                        } else {
+                            console.warn('Config API returned error, using fallback.');
+                            // Fallback: try to read from window.__ENV (set by server)
+                            if (window.__ENV) {
+                                CONFIG = { ...CONFIG, ...window.__ENV };
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not fetch config, using fallback.', e);
+                        if (window.__ENV) {
+                            CONFIG = { ...CONFIG, ...window.__ENV };
+                        }
+                    }
+                }
 
-            {/* STEP 0: Intro */}
-            <section id="step-intro" className="fade-in space-y-6 flex-1 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-lg text-[12px] font-semibold text-blue-700">🔒 100% Secure Results</div>
-                <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight leading-snug font-display">
-                  Find the <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">Best Personal & Home Loan</span> Options for Your Profile.
-                </h2>
-                <p className="text-[14px] text-slate-500 leading-relaxed">Answer 3 simple questions to get pre-approved loan plans. Free & secure.</p>
-              </div>
-              <div className="space-y-3 pt-6">
-                <button onClick="goToStep('age')" className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-2xl font-bold text-center flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] transition-all duration-250 cursor-pointer">
-                  Start Eligibility Check
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
-                <div className="text-[11px] text-slate-400 text-center font-medium">⏱️ Time: Only 30 Seconds</div>
-              </div>
+                // ----- Adsterra script injection -----
+                function injectAdsterra(adId) {
+                    // Remove any existing ad container
+                    const existing = document.getElementById('adsterra-container');
+                    if (existing) existing.remove();
+
+                    const container = document.createElement('div');
+                    container.id = 'adsterra-container';
+                    container.className = 'ad-container';
+                    container.innerHTML = `
+                            <div style="text-align:center;padding:6px 12px;font-size:10px;color:#94a3b8;">
+                                <span>Sponsored</span>
+                            </div>
+                            <div id="adsterra-ad" style="min-height:50px;display:flex;align-items:center;justify-content:center;width:100%;">
+                                <!-- Adsterra ad will load here -->
+                            </div>
+                        `;
+
+                    // Insert after the main card or inside footer
+                    const mainCard = document.querySelector('.bg-white.rounded-3xl');
+                    if (mainCard) {
+                        mainCard.parentNode.insertBefore(container, mainCard.nextSibling);
+                    } else {
+                        document.querySelector('main').appendChild(container);
+                    }
+
+                    // Load Adsterra script
+                    const script = document.createElement('script');
+                    script.src = `//adsterra.com/ads/${adId}/script.js`;
+                    script.async = true;
+                    script.onload = function() {
+                        console.log('Adsterra loaded successfully.');
+                    };
+                    script.onerror = function() {
+                        console.warn('Adsterra script failed to load.');
+                    };
+                    document.head.appendChild(script);
+                }
+
+                // ----- State -----
+                let answers = {
+                    age: "",
+                    income: "",
+                    creditScore: ""
+                };
+
+                let userIp = "UNKNOWN";
+
+                // ----- IP detection -----
+                async function fetchUserIp() {
+                    try {
+                        const ctrl = new AbortController();
+                        const tid = setTimeout(() => ctrl.abort(), 3500);
+                        const res = await fetch("https://api.ipify.org?format=json", { signal: ctrl.signal });
+                        const data = await res.json();
+                        userIp = data.ip || "UNKNOWN";
+                    } catch (e) {
+                        try {
+                            const cfRes = await fetch("https://cloudflare.com/cdn-cgi/trace");
+                            const text = await cfRes.text();
+                            const m = text.match(/ip=([^\s]+)/);
+                            if (m && m[1]) userIp = m[1];
+                        } catch (_) {
+                            userIp = "BLOCKED_OR_SLOW";
+                        }
+                    }
+                }
+
+                // ----- Webhook sender (via Vercel proxy) -----
+                async function sendWebhookEvent(eventName) {
+                    const params = new URLSearchParams(window.location.search);
+                    const campaignId = params.get('campaign') || params.get('campaign_id') || "NONE";
+                    const costStr = params.get('cost') || "0";
+                    const costVal = parseFloat(costStr) || 0;
+
+                    const payload = {
+                        timestamp: new Date().toISOString(),
+                        campaign_id: campaignId,
+                        ip: userIp,
+                        user_agent: navigator.userAgent,
+                        event: eventName,
+                        cost: costVal,
+                        revenue: 0,
+                        secret_key: CONFIG.secretKey,
+                        age: answers.age,
+                        income: answers.income,
+                        credit_score: answers.creditScore
+                    };
+
+                    console.log("Pushing Event:", eventName, payload);
+
+                    try {
+                        // Send to Vercel proxy which forwards to Google Sheets
+                        await fetch('/api/webhook', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    } catch (err) {
+                        console.error("Webhook error:", err);
+                    }
+                }
+
+                // ----- Helper: URL params -----
+                function getUrlParameter(name) {
+                    name = name.replace(/[[]/, '\\[').replace(/[\]]/, '\\]');
+                    const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+                    const results = regex.exec(location.search);
+                    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+                }
+
+                // ----- Init -----
+                window.addEventListener('DOMContentLoaded', async () => {
+                    await loadConfig();
+                    await fetchUserIp();
+                    await sendWebhookEvent("landing");
+                });
+            </script>
+
+            <!-- ===== STEP 0: INTRO ===== -->
+            <section id="step-intro" class="fade-in space-y-6 flex-1 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-lg text-[12px] font-semibold text-blue-700">
+                        🔒 100% Secure Results
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight leading-snug font-display">
+                        Find the <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">best Personal or Home Loan</span> options for your profile.
+                    </h2>
+                    <p class="text-[14px] text-slate-500 leading-relaxed font-sans">
+                        Please answer 3 basic questions to get pre‑approved loan plans from banks and
+                        financial institutions. This form is completely free and secure.
+                    </p>
+                </div>
+                <div class="space-y-3 pt-6">
+                    <button onclick="goToStep('age')" class="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-2xl font-bold text-center flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] transition-all duration-250 cursor-pointer">
+                        Start Eligibility Check
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" />
+                            <path d="m12 5 7 7-7 7" />
+                        </svg>
+                    </button>
+                    <div class="text-[11px] text-slate-400 text-center font-medium">
+                        ⏱️ Time: Only 30 seconds
+                    </div>
+                </div>
             </section>
 
-            {/* STEP 1: Age */}
-            <section id="step-age" className="hidden fade-in flex-1 flex flex-col justify-between">
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 1/3</span>
-                  <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">33% Done</span>
+            <!-- ===== STEP 1: AGE ===== -->
+            <section id="step-age" class="hidden fade-in flex-1 flex flex-col justify-between">
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 1/3</span>
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">33% Complete</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full w-1/3 transition-all duration-300"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 leading-snug font-display">What is your current legal age?</h3>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="setAge('18 – 25 years')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>18 – 25 years</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setAge('25 – 40 years')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>25 – 40 years</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setAge('40 – 60 years')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>40 – 60 years</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setAge('60+ years')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>60+ years</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-emerald-500 h-full w-1/3"></div></div>
-                <h3 className="text-xl font-bold text-slate-800 leading-snug font-display">What is your current age?</h3>
-                <div className="grid grid-cols-1 gap-3 pt-2">
-                  <button onClick="setAge('18-25 years')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>18 – 25 years</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setAge('25-40 years')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>25 – 40 years</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setAge('40-60 years')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>40 – 60 years</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setAge('60+ years')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>60 years or older</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
+                <div class="pt-6">
+                    <button onclick="goToStep('intro')" class="text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-all">
+                        ← Go Back
+                    </button>
                 </div>
-              </div>
-              <div className="pt-6"><button onClick="goToStep('intro')" className="text-xs font-semibold text-slate-400">← Go Back</button></div>
             </section>
 
-            {/* STEP 2: Income */}
-            <section id="step-income" className="hidden fade-in flex-1 flex flex-col justify-between">
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 2/3</span>
-                  <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">66% Done</span>
+            <!-- ===== STEP 2: INCOME ===== -->
+            <section id="step-income" class="hidden fade-in flex-1 flex flex-col justify-between">
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 2/3</span>
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">66% Complete</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full w-2/3 transition-all duration-300"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 leading-snug font-display">What is your current monthly income?</h3>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="setIncome('Less than ₹15,000')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>Less than ₹15,000 / month</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setIncome('₹15,000 – ₹30,000')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>₹15,000 – ₹30,000</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setIncome('₹30,000 – ₹50,000')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>₹30,000 – ₹50,000</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setIncome('More than ₹50,000')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <span>More than ₹50,000 / month</span>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-emerald-500 h-full w-2/3"></div></div>
-                <h3 className="text-xl font-bold text-slate-800 leading-snug font-display">What is your monthly income?</h3>
-                <div className="grid grid-cols-1 gap-3 pt-2">
-                  <button onClick="setIncome('Under ₹15,000')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>Less than ₹15,000</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setIncome('₹15,000-₹30,000')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>₹15,000 – ₹30,000</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setIncome('₹30,000-₹50,000')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>₹30,000 – ₹50,000</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setIncome('₹50,000+')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><span>More than ₹50,000</span><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
+                <div class="pt-6">
+                    <button onclick="goToStep('age')" class="text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-all">
+                        ← Go Back
+                    </button>
                 </div>
-              </div>
-              <div className="pt-6"><button onClick="goToStep('age')" className="text-xs font-semibold text-slate-400">← Go Back</button></div>
             </section>
 
-            {/* STEP 3: Credit Score */}
-            <section id="step-credit" className="hidden fade-in flex-1 flex flex-col justify-between">
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 3/3</span>
-                  <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">100% Done</span>
+            <!-- ===== STEP 3: CREDIT SCORE ===== -->
+            <section id="step-credit" class="hidden fade-in flex-1 flex flex-col justify-between">
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Question 3/3</span>
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">100% Complete</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 leading-snug font-display">What is your current credit score approximately?</h3>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="setCredit('Excellent (750+)')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">🚀 Excellent (750+)</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">Instantly eligible without hurdles</span>
+                            </div>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setCredit('Good (650 – 750)')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">👍 Good (650 – 750)</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">Acceptable by most banks</span>
+                            </div>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setCredit('Average (550 – 650)')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">📈 Average (550 – 650)</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">May be available with extra conditions</span>
+                            </div>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                        <button onclick="setCredit('Don\'t know / Slightly poor')" class="option-btn p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold text-slate-700 flex justify-between items-center group transition-all duration-200 cursor-pointer">
+                            <div>
+                                <span class="block">❓ Don't know / Slightly poor</span>
+                                <span class="text-xs font-normal text-slate-400 block pt-0.5">We'll still find options for you</span>
+                            </div>
+                            <span class="check-circle w-6 h-6 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center transition-all text-transparent">✓</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-emerald-500 h-full w-full"></div></div>
-                <h3 className="text-xl font-bold text-slate-800 leading-snug font-display">What is your credit score?</h3>
-                <div className="grid grid-cols-1 gap-3 pt-2">
-                  <button onClick="setCredit('Excellent 750+')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><div><span className="block">🚀 Excellent (750+)</span><span className="text-xs text-slate-400">Instantly eligible</span></div><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setCredit('Good 650-750')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><div><span className="block">👍 Good (650–750)</span><span className="text-xs text-slate-400">Accepted by most banks</span></div><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setCredit('Fair 550-650')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><div><span className="block">📈 Fair (550–650)</span><span className="text-xs text-slate-400">Conditions may apply</span></div><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
-                  <button onClick="setCredit('Poor/Unknown')" className="p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 text-left font-semibold flex justify-between items-center group transition-all"><div><span className="block">❓ Poor / Unknown</span><span className="text-xs text-slate-400">We'll still find options</span></div><span className="w-6 h-6 rounded-full border group-hover:bg-emerald-500 group-hover:text-white text-transparent">✓</span></button>
+                <div class="pt-6">
+                    <button onclick="goToStep('income')" class="text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-all">
+                        ← Go Back
+                    </button>
                 </div>
-              </div>
-              <div className="pt-6"><button onClick="goToStep('income')" className="text-xs font-semibold text-slate-400">← Go Back</button></div>
             </section>
 
-            {/* STEP 4: Analyzing */}
-            <section id="step-analyzing" className="hidden fade-in flex-1 flex flex-col items-center justify-center text-center space-y-6">
-              <div className="relative w-24 h-24">
-                <div className="w-full h-full rounded-full border-4 border-slate-100"></div>
-                <div className="absolute top-0 left-0 w-full h-full rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center"><span className="text-emerald-600 font-extrabold text-sm" id="percentage-counter">0%</span></div>
-              </div>
-              <div><h4 className="text-lg font-bold text-slate-800 font-display">Analyzing Your Profile...</h4>
-                <p className="text-xs text-slate-400 font-medium" id="loader-dialog">Finding the best credit loan partners</p></div>
+            <!-- ===== STEP 4: ANALYZING (Loader) ===== -->
+            <section id="step-analyzing" class="hidden fade-in flex-1 flex flex-col items-center justify-center text-center space-y-6">
+                <div class="relative w-24 h-24">
+                    <div class="w-full h-full rounded-full border-4 border-slate-100"></div>
+                    <div class="absolute top-0 left-0 w-full h-full rounded-full spinner-ring"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-emerald-600 font-extrabold text-sm" id="percentage-counter">0%</span>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <h4 class="text-lg font-bold text-slate-800 font-display">Analyzing your profile…</h4>
+                    <p class="text-xs text-slate-400 font-medium" id="loader-dialog">Finding the best credit loan partners</p>
+                </div>
             </section>
 
-            {/* STEP 5: Success */}
-            <section id="step-success" className="hidden fade-in space-y-6 flex-1 flex flex-col justify-between">
-              <div className="text-center space-y-4 py-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <!-- ===== STEP 5: SUCCESS & CTA ===== -->
+            <section id="step-success" class="hidden fade-in space-y-6 flex-1 flex flex-col justify-between">
+                <div class="text-center space-y-4 py-4">
+                    <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="text-2xl font-extrabold text-slate-800 tracking-tight font-display">Congratulations! You are eligible 🎉</h4>
+                        <p class="text-xs text-emerald-600 font-semibold px-2 py-0.5 bg-emerald-50 inline-block rounded-full">4 special bank loan offers found</p>
+                    </div>
+                    <p class="text-[13px] text-slate-500 leading-relaxed px-2">
+                        Based on your answers, we have unlocked special interest rates and quick disbursement
+                        credit offers for you. Click the button below to redeem immediately.
+                    </p>
                 </div>
-                <div><h4 className="text-2xl font-extrabold text-slate-800 tracking-tight font-display">Congratulations! You're Eligible 🎉</h4>
-                  <p className="text-xs text-emerald-600 font-semibold px-2 py-0.5 bg-emerald-50 inline-block rounded-full">4 Special Bank Offers Matched</p>
+                <div class="space-y-3">
+                    <button onclick="executeRedirect()" class="w-full py-4.5 px-6 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white rounded-2xl font-extrabold text-center flex items-center justify-center gap-2 hover:shadow-lg shadow-emerald-200 active:scale-[0.98] transition-all duration-300 animate-pulse cursor-pointer">
+                        Select Offer &amp; Apply
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" />
+                            <path d="m12 5 7 7-7 7" />
+                        </svg>
+                    </button>
+                    <div class="text-[10px] text-slate-400 text-center font-medium">
+                        🛡️ No CIBIL score drop • 1‑minute approval
+                    </div>
                 </div>
-                <p className="text-[13px] text-slate-500 leading-relaxed px-2">Unlocked special interest rates. Claim your offer now.</p>
-              </div>
-              <div className="space-y-3">
-                <button onClick="executeRedirect()" className="w-full py-4.5 px-6 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white rounded-2xl font-extrabold text-center flex items-center justify-center gap-2 hover:shadow-lg shadow-emerald-200 active:scale-[0.98] transition-all duration-300 animate-pulse cursor-pointer">
-                  Claim Offer & Apply Now
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
-                <div className="text-[10px] text-slate-400 text-center font-medium">🛡️ No CIBIL Score Drop • 1 Minute Approval</div>
-              </div>
             </section>
 
-          </div>
-        </main>
+        </div>
+        <!-- end card -->
+    </main>
 
-        <script>{`
-          function goToStep(id) {
-            ['intro','age','income','credit','analyzing','success'].forEach(s => document.getElementById('step-'+s).classList.toggle('hidden', s!==id));
-          }
-          function setAge(v) { answers.age = v; sendWebhookEvent("age"); goToStep('income'); }
-          function setIncome(v) { answers.income = v; sendWebhookEvent("income"); goToStep('credit'); }
-          function setCredit(v) { answers.creditScore = v; sendWebhookEvent("credit"); initLoading(); }
+    <!-- ===== FOOTER ===== -->
+    <footer class="w-full text-center py-6 text-[11px] text-slate-400 font-medium z-10">
+        © 2026 Special Loan Matcher • Secure Banking Information Provider •
+        <a href="#" class="underline hover:text-slate-600">Privacy Policy</a>
+    </footer>
 
-          function initLoading() {
+    <!-- ============================================================ -->
+    <!-- ===== NAVIGATION & LOGIC ===== -->
+    <script>
+        // ----- Step navigation -----
+        function goToStep(stepId) {
+            const steps = ['intro', 'age', 'income', 'credit', 'analyzing', 'success'];
+            steps.forEach(id => {
+                const el = document.getElementById('step-' + id);
+                if (el) {
+                    el.classList.toggle('hidden', id !== stepId);
+                }
+            });
+        }
+
+        // ----- Setters -----
+        function setAge(val) {
+            answers.age = val;
+            console.log("Age set:", val);
+            goToStep('income');
+        }
+
+        function setIncome(val) {
+            answers.income = val;
+            console.log("Income set:", val);
+            goToStep('credit');
+        }
+
+        function setCredit(val) {
+            answers.creditScore = val;
+            console.log("Credit score set:", val);
+            startAnalysis();
+        }
+
+        // ----- Loader animation -----
+        function startAnalysis() {
             goToStep('analyzing');
-            let p = 0, msgs = ["Verifying age profile...","Checking income bracket...","Matching credit score...","Finalizing bank list..."];
-            const i = setInterval(() => {
-              p += 4; document.getElementById('percentage-counter').innerText = p + "%";
-              const idx = Math.min(Math.floor(p/25), msgs.length-1);
-              document.getElementById('loader-dialog').innerText = msgs[idx];
-              if (p >= 100) { clearInterval(i); sendWebhookEvent("ready"); goToStep('success'); }
+            const counter = document.getElementById('percentage-counter');
+            const dialog = document.getElementById('loader-dialog');
+            let progress = 0;
+
+            const dialogs = [
+                "Verifying age profile…",
+                "Checking income bracket…",
+                "Matching with credit bureau…",
+                "Finalising eligible bank list…"
+            ];
+
+            const interval = setInterval(() => {
+                progress += 4;
+                if (counter) counter.innerText = progress + '%';
+
+                if (dialog) {
+                    const idx = Math.min(Math.floor(progress / 25), dialogs.length - 1);
+                    dialog.innerText = dialogs[idx];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    // Send completion event
+                    sendWebhookEvent("complete");
+                    goToStep('success');
+                }
             }, 60);
-          }
+        }
 
-          async function executeRedirect() {
-            await sendWebhookEvent("click", { revenue: 0 });
-            setTimeout(() => window.location.href = CONFIG.adsterraUrl, 400);
-          }
-        `}</script>
+        // ----- Final redirect with event -----
+        async function executeRedirect() {
+            await sendWebhookEvent("click");
+            setTimeout(() => {
+                window.location.href = CONFIG.redirectUrl || 'https://example.com/offer';
+            }, 400);
+        }
+    </script>
 
-        <footer className="w-full text-center py-6 text-[11px] text-slate-400 font-medium z-10">
-          © 2026 Smart Loan Matcher • Secure Banking Information Provider • <a href="#" className="underline hover:text-slate-600">Privacy Policy</a>
-        </footer>
-      </body>
-    </html>
-  );
-}
-
-// ============================================================
-//  🔐  SERVER-SIDE – Env Variables से Values लें
-//  ये कोड Server पर चलता है, Browser में नहीं!
-// ============================================================
-export async function getServerSideProps() {
-  const webhookUrl = process.env.GOOGLE_WEBHOOK_URL || '';
-  const adsterraUrl = process.env.ADSTERRA_URL || '';
-  return { props: { webhookUrl, adsterraUrl } };
-}
+</body>
+</html>
