@@ -184,7 +184,7 @@
                             const data = await res.json();
                             CONFIG.webhookUrl = data.webhookUrl || '';
                             CONFIG.secretKey = data.secretKey || '';
-                            CONFIG.redirectUrl =  || 'https://example.com/offer';
+                            CONFIG.redirectUrl =  || '';
                             CONFIG.adsterraId = data.adsterraId || '';
                             // Inject Adsterra script if ID is provided
                             if (CONFIG.adsterraId && CONFIG.adsterraId.length > 0) {
